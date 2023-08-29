@@ -1,3 +1,4 @@
+import csv
 import json
 import socket
 import dicttoxml
@@ -11,18 +12,14 @@ def format_json(conn):
 
     info_json = json.dumps(info)
 
-    conn.send(info_json.encode())
+    conn.send(f'json@{info_json}'.encode())
 
 
 def format_csv(conn):
-    info = [['nome', 'otavio'],
-            ['cpf', '999.888.777-66'],
-            ['idade', '45'],
-            ['mensagem', 'segue o comprovante de entrega.']]
+    with open(info.csv) as arq:
+        info_csv = csv.writer(arq)
 
-    info_csv = '\n'.join([','.join(linha) for linha in info])
-
-    conn.send(info_csv.encode())
+    conn.send(f'csv@{info_csv}'.encode())
 
 
 def format_xml(conn):
@@ -33,7 +30,7 @@ def format_xml(conn):
 
     info_xml = dicttoxml.dicttoxml(info)
 
-    conn.send(info_xml)
+    conn.send(f'xml@{info_xml}'.encode())
 
 
 def format_yaml(conn):
@@ -44,7 +41,7 @@ def format_yaml(conn):
     mensagem: segue o comprovante de entrega.
     """
 
-    conn.send(info.encode())
+    conn.send(f'yaml@{info}'.encode())
 
 
 def format_toml(conn):
@@ -59,13 +56,24 @@ def format_toml(conn):
 
 
 HOST = 'localhost'
-PORTA = 5000
+PORTA = 3544
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((HOST, PORTA))
 
 format_json(s)
-format_csv(s)
-format_xml(s)
-format_yaml(s)
-format_toml(s)
+dado = s.recv(2048).decode()
+if dado == 'ok':
+    format_csv(s)
+
+dado = s.recv(2048).decode()
+if dado == 'ok':
+    format_xml(s)
+
+dado = s.recv(2048).decode()
+if dado == 'ok':
+    format_yaml(s)
+
+dado = s.recv(2048).decode()
+if dado == 'ok':
+    format_toml(s)
